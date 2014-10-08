@@ -1,10 +1,12 @@
 {
   "name": "offcloud",
-  "title": "offcloud",
+  "title": "Offcloud",
   "id": "jid1-rtnEptCOUJvd5Q",
-  "description": "a basic add-on",
+  "description": "Allows you to take any link & fetch its data, either by directly downloading it, backing it up or transferring it to a third party.",
   "author": "",
   "license": "MPL 2.0",
-  "version": "0.1",
-  "dependencies": "menuitems"
+  "version": "0.1.6",
+  "dependencies": "menuitems",
+  "icon": "data/icon32.png",
+  "icon64": "data/icon64.png"
 }
