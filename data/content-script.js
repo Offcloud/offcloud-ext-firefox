@@ -17,6 +17,7 @@ self.on("context", function (node) {
 });
 
 self.on("click", function (node) {
-	var text = window.getSelection().toString();
-	self.postMessage(node.href || text);
+	var text = window.getSelection().toString(),
+        href = node.href || getParentLinkRecr(node);
+	self.postMessage(href || text);
 });
