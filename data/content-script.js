@@ -1,16 +1,16 @@
-function getParentLink(node) {
-    // dirty way to find anchor parents, for firefox
-    var parent = node.parentNode;
-    if(parent.parentNode && parent.parentNode.href) {
-        parent = parent.parentNode;
-    } else if (parent.parentNode && parent.parentNode.parentNode && parent.parentNode.href) {
-        parent = parent.parentNode.parentNode;
+function getParentLinkRecr(node) {
+    if(node.parentNode) {
+        if (node.parentNode.href) {
+            return node.parentNode.href
+        } else {
+            return getParentLinkRecr(node.parentNode)
+        }
     }
-    return parent.href;
+    return null;
 }
 
 self.on("context", function (node) {
-    var href = node.href || getParentLink(node);
+    var href = node.href || getParentLinkRecr(node);
     if (href || window.getSelection().toString().length > 0) {
     	return true;
     }
