@@ -48,6 +48,7 @@ function showBsModel(msg, list, showType, customType) {
         modalBody.remove();
         sm({cmd: "removeFrame"});
     });
+    console.log(msg);
     if (showType != "custom") {
         if (!msg.remote && !msg.not_available && !msg.error) {
             var urlArea = modalMsgBody.find("textarea");
