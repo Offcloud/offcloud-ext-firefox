@@ -89,7 +89,7 @@ function showBsModel(msg, list, showType, customType) {
 
         } else if (msg.error) {
             modalTitle.text("Error Occurred");
-            modalMsgBody.html("<h5 style='color: red'>" + (msg.error || 'Sorry for an unexpected error!') + "</h5>");
+            modalMsgBody.html("<h5 style='color: red'>" + (msg.error) + "</h5>");
             modalFooter.html('<button type="button" class="btn btn-primary" id="momane_error">Check your Offcloud.com account</button>');
             $("#momane_error").click(function () {
                 window.open("https://offcloud.com/");
