@@ -1,54 +1,37 @@
 /**
  * Created by Hank on 9/5/2014.
+ * Modified by Teracy on 10/17/2014
  */
-var s = self.options.storage;
-var sm = self.postMessage;
-var errorList = {
-    premium: "User must purchase a premium downloading addon for this download",
-    links: "User must purchase a Link increase addon for this download",
-    proxy: "User must purchase a proxy downloading addon for this download",
-    video: "User must purchase a video sharing site support addon for this download",
-    unknown: "Unknown error, please try one more time or contact us."
-};
 
+var s = self.options.storage,
+    sm = self.postMessage,
+    errorList = {
+        premium: "User must purchase a premium downloading addon for this download",
+        links: "User must purchase a Link increase addon for this download",
+        proxy: "User must purchase a proxy downloading addon for this download",
+        video: "User must purchase a video sharing site support addon for this download",
+        unknown: "Unknown error, please try one more time or contact us."
+    };
+
+function createHtml(tag, data) {
+    data = data || {};
+    return $("<" + tag + ">", data);
+}
 
 
 function showBsModel(msg, list, showType, customType) {
-    var model = '<div class="modal" id="momane_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="position: absolute; width: 100%;height: 100%;">' +
-        '<div class="modal-dialog" style="position: absolute; left: 0; top: 0;width: 100%; margin: 0;height: 100%;">' +
-        ' <div class="modal-content" style="height: 100%;">' +
-        ' <div class="modal-header">' +
-        '    <button type="button" id="momane_modal_close" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>' +
-        '  <h4 class="modal-title" id="myModalLabel">Your Offcloud.com links</h4>' +
-        ' </div>' +
-        ' <div class="modal-body" id="momane_modalBody"><textarea class="form-control" rows="3" style="font-size: 12px"></textarea>' +
-        '  </div>' +
-        '  <div class="modal-footer" id="momane_modal_footer">' +
-        '      <button type="button" class="btn btn-default" id="momane_copy">Copy link(s)</button>' +
-        '      <button type="button" class="btn btn-primary" id="momane_open">Open link(s) in new tab(s)</button>' +
-        '   </div>' +
-        '  </div>' +
-
-        '   </div>' +
-        '  </div>';
-    if ($("#momane_modal").length != 0) {
-        $("#momane_modal").remove();
-    }
-    $("body").append(model);
-    var modalBody = $("#momane_modal");
-    var modalMsgBody = $("#momane_modalBody");
-    var modalCopyBtn = $("#momane_copy");
-    var modalOpenBtn = $("#momane_open");
-    var closeBtn = $('#momane_modal_close');
-    var modalTitle = $("#myModalLabel");
-
-    var modalFooter = $("#momane_modal_footer");
+    var modalBody = $("#momane_modal"),
+        modalMsgBody = $("#momane_modalBody"),
+        modalCopyBtn = $("#momane_copy"),
+        modalOpenBtn = $("#momane_open"),
+        closeBtn = $('#momane_modal_close'),
+        modalTitle = $("#myModalLabel"),
+        modalFooter = $("#momane_modal_footer");
     closeBtn.click(function () {
         modalBody.fadeOut();
         modalBody.remove();
         sm({cmd: "removeFrame"});
     });
-    console.log(msg);
     if (showType != "custom") {
         if (!msg.remote && !msg.not_available && !msg.error) {
             var urlArea = modalMsgBody.find("textarea");
@@ -89,51 +72,80 @@ function showBsModel(msg, list, showType, customType) {
 
         } else if (msg.error) {
             modalTitle.text("Error Occurred");
-            modalMsgBody.html("<h5 style='color: red'>" + (msg.error) + "</h5>");
-            modalFooter.html('<button type="button" class="btn btn-primary" id="momane_error">Check your Offcloud.com account</button>');
-            $("#momane_error").click(function () {
-                window.open("https://offcloud.com/");
-            });
+            var errorText = createHtml('h5', {class: 'error', text: msg.error}),
+                errorBtn = createHtml('button', {
+                                class: 'btn btn-primary',
+                                id: 'momane_error',
+                                text: 'Check your Offcloud.com account',
+                                click: function() {
+                                    window.open("https://offcloud.com/");
+                                }
+                            });
+            modalMsgBody.html(errorText);
+            modalFooter.html(errorBtn);
         } else {
             modalTitle.text("Your Offcloud.com results");
-            var finalInfo = "";
-            modalMsgBody.html("<h5>Your query to Offcloud.com API has returned the following:</h5>");
+            var finalInfo = "",
+                msgText = createHtml('h5', {text: 'Your query to Offcloud.com API has returned the following:'}),
+                msgSecondText = '',
+                errorBtn = '';
+            modalMsgBody.html(msgText);
             if (!msg.remote) {
                 if (msg.not_available) {
                     finalInfo = errorList[msg.not_available];
                 } else {
                     finalInfo = errorList.unknown;
                 }
-                modalFooter.html('<button type="button" class="btn btn-primary" id="momane_error">Check your Offcloud.com account</button>');
-                $("#momane_error").click(function () {
-                    window.open("https://offcloud.com/");
-                });
+                errorBtn = createHtml('button', {
+                                class: 'btn btn-primary',
+                                id: 'momane_error',
+                                text: 'Check your Offcloud.com account',
+                                click: function() {
+                                    window.open("https://offcloud.com/");
+                                }
+                            });
+                modalFooter.html(errorBtn);
             }
             else if (msg.remote) {
                 finalInfo = msg.remote;
-                modalFooter.html('<button type="button" class="btn btn-primary" id="momane_remote">Check your Offcloud.com account</button>');
-                $("#momane_remote").click(function () {
-                    window.open(" https://offcloud.com/#/remote");
-                });
+                errorBtn = createHtml('button', {
+                                class: 'btn btn-primary',
+                                id: 'momane_remote',
+                                text: 'Check your Offcloud.com account',
+                                click: function() {
+                                    window.open(" https://offcloud.com/#/remote");
+                                }
+                            });
+                modalFooter.html(errorBtn);
             }
-            modalMsgBody.append("<h6 style='color:#5e5e5e;font-size: 13px;font-weight: bolder;'>" + finalInfo + "</h6>");
+            msgSecondText = createHtml('h6', {text: finalInfo || 'undefined'});
+            modalMsgBody.append(msgSecondText);
 
         }
     } else {
+
         var cusModalTitle = ["Instant download custom links", "Cloud download custom links" , "Remote download custom links"];
         modalTitle.text(cusModalTitle[customType]);
-        var processBtn = '<button type="button" class="btn btn-primary" id="momane_cus">Process link(s) to Offcloud.com</button>';
+        var processBtn = createHtml('button', {
+                                class: 'btn btn-primary',
+                                id: 'momane_cus',
+                                text: 'Process link(s) to Offcloud.com',
+                                click: function() {
+                                    var customLinks = modalBody.find("textarea").val();
+                                    if (customLinks && customLinks.trim() != "") {
+                                        sm({cmd: "custom", html: customLinks, remote: customType});
+                                    } else {
+                                        var helpBlock = createHtml('p', {
+                                            class: 'help-block',
+                                            text: 'Please input links you want to process.'
+                                        });
+                                        modalBody.addClass('has-error');
+                                        modalBody.find("textarea").after(helpBlock)
+                                        modalBody.find("textarea").focus();
+                                    }
+                                }
+                            });
         modalFooter.html(processBtn);
-        $("#momane_cus").click(function () {
-            var customLinks = modalBody.find("textarea").val();
-            if (customLinks && customLinks.trim() != "") {
-                sm({cmd: "custom", html: customLinks, remote: customType});
-            } else {
-                modalBody.addClass('has-error');
-                modalBody.find("textarea").after('<p class="help-block">Please input links you want to process.</p>')
-                modalBody.find("textarea").focus();
-            }
-        });
 
     }
     modalBody.fadeIn();
