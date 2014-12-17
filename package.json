@@ -5,7 +5,7 @@
   "description": "Allows you to take any link & fetch its data, either by directly downloading it, backing it up or transferring it to a third party.",
   "author": "",
   "license": "MPL 2.0",
-  "version": "0.1.6.2",
+  "version": "0.1.6.3",
   "dependencies": "menuitems",
   "icon": "data/icon32.png",
   "icon64": "data/icon64.png"
