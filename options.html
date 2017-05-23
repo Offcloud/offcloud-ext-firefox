@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style>
+		*{
+			box-sizing:border-box;
+		}
+		html, body {
+			margin:0;
+		}
+		.main-container{
+			text-align:center;
+		}
+		div{
+			margin: 5px;
+		}
+		input{
+			width:75%;
+		}
+		button{ 
+			-moz-appearance: none;
+			min-height: 30px; 
+			border: 1px solid; 
+			-moz-border-top-colors: none !important; 
+			-moz-border-right-colors: none !important; 
+			-moz-border-bottom-colors: none !important; 
+			-moz-border-left-colors: none !important; 
+			border-radius: 2px; 
+			background-color: var(--in-content-page-background); 
+			border-color: #B0B0B0; 
+			color: #282828; 
+			font-size: 14px; 
+			padding:4px 6px;
+		} 
+		button:hover { 
+			background: #F0F0F0; 
+		} 
+		button:active { 
+			background: #E0E0E0; 
+		}
+		input {
+			border: 1px solid rgb(193, 193, 193);
+			min-height: 32px;
+			padding-right: 10px;
+			padding-left: 10px;
+			padding-top: 0;
+			padding-bottom: 0;
+		}
+		select {
+			border: 1px solid rgb(193, 193, 193);
+			min-height: 32px;
+			padding-right: 18px;
+			padding-left: 9px;
+			padding-top: 4px;
+			font-size: 14px;
+			/*max-width: 100px;*/
+			-moz-appearance: none;
+		    text-indent: 0.01px;
+		    text-overflow: '';
+		    position: relative;
+		    z-index:11;
+		    background-color: transparent;
+		}
+
+		.select-wrapper{
+			display:inline-block;
+			position: relative;
+		}
+
+		.select-wrapper:after{
+			content: "";
+			width: 0;
+			height: 0;
+			border: 4px solid transparent;
+			border-color: #000 transparent transparent transparent;
+			position: absolute;
+			top: 15px;
+			right: 8px;
+			z-index: 5;
+		}
+	</style>
+</head>
+<body>
+	<div class="main-container">
+		<div>
+			Set your API key below:
+		</div>
+		<div>
+			<input type="text" placeholder="API key (e.g. VHK7OoGO57kH1JOO9VlNo8AdRVF0wQ92)" id="apiKeyInput">
+		</div>
+		<div>
+			<button id="saveApiKeyBtn">Save API key</button>
+		</div>
+		<div>
+			Set your remote upload account:
+		</div>
+		<div class="select-wrapper">
+			<select name="remoteOptionsSelect" id="remoteOptionsSelect">
+				<option value="default">Default</option>
+			</select>
+		</div>
+		<div>
+			<button id="saveRemoteOptionBtn">Save remote account</button>
+		</div>
+		<div class="status-div"></div>
+	</div>
+	<script src="options.js"></script>
+</body>
+</html>
