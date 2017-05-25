@@ -1,11 +1,6 @@
 initMain();
 
-function initMain(){
-    var notie = window.notie;
-
-    var $font = $('<link href="https://fonts.googleapis.com/css?family=Open+Sans:600" rel="stylesheet" type="text/css">');
-    $font.appendTo('head');
-
+function initMain() {
     var $loaderContainer = $("<div>").css({
         'position': 'fixed',
         'bottom': '5px',
@@ -20,7 +15,7 @@ function initMain(){
     browser.runtime.onMessage.addListener(requestHandler);
 
     function requestHandler(request) {
-        return new Promise(function(resolve, reject){
+        return new Promise(function (resolve, reject) {
             var response = {};
 
             if (request.cmd == "getSelectedHtml") {
@@ -37,7 +32,7 @@ function initMain(){
                 showRemoteInProcessNotification();
                 resolve({});
             } else if (request.cmd == "successNotification") {
-                showSuccessNotification(request.text, request.type, function(obj) {
+                showSuccessNotification(request.text, request.type, function (obj) {
                     resolve(obj);
                 });
             } else if (request.cmd == "errorNotification") {
@@ -81,7 +76,11 @@ function initMain(){
 
     function showRemoteInProcessNotification() {
         removeLoader();
-        notie.alert(1, 'Your remote upload has begun.', 4);
+        notie.alert({
+            type: 1,
+            text: 'Your remote upload has begun.',
+            time: 4
+        });
     }
 
     function showSuccessNotification(text, type, callback) {
@@ -94,14 +93,23 @@ function initMain(){
         else if (type == 1)
             confirmText = 'Transfer has started & links are copied. Open them in new tab?'
 
-        notie.confirm(confirmText, 'Yes', 'No', function() {
-            callback({success:true});
+        notie.confirm({
+            text: confirmText,
+            submitText: 'Yes',
+            cancelText: 'No',
+            submitCallback: function () {
+                callback({success: true});
+            }
         });
     }
 
     function showErrorNotification() {
         removeLoader();
-        notie.alert('error', 'An error occured!', 4);
+        notie.alert({
+            type: 'error',
+            text: 'An error occured!',
+            time: 4
+        });
     }
 
     function showModal(type) {
@@ -115,21 +123,25 @@ function initMain(){
             label = 'Remote download custom links';
 
         notie.textarea({
-            rows: 5
-        }, label, 'Process link(s) to Offcloud.com', 'Cancel', function(customLinks) {
-            if (customLinks && customLinks.trim() != "") {
-                chrome.runtime.sendMessage({
-                    cmd: "custom",
-                    html: customLinks,
-                    type: type
-                });
+            text: label,
+            submitText: 'Process link(s) to Offcloud.com',
+            cancelText: 'Cancel',
+            rows: 5,
+            submitCallback: function (customLinks) {
+                if (customLinks && customLinks.trim() != "") {
+                    chrome.runtime.sendMessage({
+                        cmd: "custom",
+                        html: customLinks,
+                        type: type
+                    });
+                }
             }
         });
     }
 
     function copyTextToClipboard(text) {
         var copyFrom = $('<textarea/>');
-        copyFrom.text(text);
+        copyFrom.text(text.replace("\n", "\r\n"));
         $('body').append(copyFrom);
         copyFrom.select();
         document.execCommand('copy');

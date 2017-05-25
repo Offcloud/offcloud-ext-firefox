@@ -1,9 +1,4 @@
-var cm = chrome.contextMenus;
-var om = chrome.runtime.onMessage;
-var t = browser.tabs;
 var remoteOptionId;
-var s = chrome.storage.local;
-var cn = chrome.notifications;
 var apiKey;
 
 var APIURLS = {
@@ -20,8 +15,8 @@ restoreOptions();
 
 initMenus();
 
-function restoreOptions(){
-    chrome.storage.local.get(['apiKey', 'remoteOptionId'], function(object){
+function restoreOptions() {
+    chrome.storage.local.get(['apiKey', 'remoteOptionId'], function (object) {
         if (object.apiKey != null)
             apiKey = object.apiKey;
 
@@ -31,18 +26,18 @@ function restoreOptions(){
 }
 
 function getApiKey(callback) {
-    s.get('apiKey', function(result) {
+    chrome.storage.local.get('apiKey', function (result) {
         apiKey = result.apiKey;
         if (apiKey == null) {
-            $.post('https://offcloud.com/api/account/get', function(data) {
+            $.post('https://offcloud.com/api/account/get', function (data) {
                 if (data.error) {
                     notifyNotLoggedIn();
                 } else {
                     apiKey = data.apiKey;
-                    s.set({
+                    chrome.storage.local.set({
                         apiKey: apiKey
-                    }, function() {
-                        setDefaultRemoteAccount(function(){
+                    }, function () {
+                        setDefaultRemoteAccount(function () {
                             callback();
                         });
                     });
@@ -54,69 +49,70 @@ function getApiKey(callback) {
     });
 }
 
-function setApiKey(newApiKey){
-    s.set({
+function setApiKey(newApiKey) {
+    chrome.storage.local.set({
         apiKey: newApiKey
-    }, function(){
+    }, function () {
         apiKey = newApiKey;
-        setDefaultRemoteAccount(()=>{});
+        setDefaultRemoteAccount(()=> {
+        });
     });
 }
 
 function initMenus() {
-    cm.removeAll();
+    chrome.contextMenus.removeAll();
 
-    cm.create({
+    chrome.contextMenus.create({
         type: "normal",
         title: "Instant download selected links",
         contexts: ["link", "selection"],
-        onclick: function(clickData, tab) {
+        onclick: function (clickData, tab) {
             downloadAction(clickData, tab, APIURLS.instantDld, false, 0);
         }
     });
-    cm.create({
+    chrome.contextMenus.create({
         type: "normal",
         title: "Cloud download selected links",
         contexts: ["link", "selection"],
-        onclick: function(clickData, tab) {
+        onclick: function (clickData, tab) {
             downloadAction(clickData, tab, APIURLS.cloudDld, false, 1);
         }
     });
-    cm.create({
+    chrome.contextMenus.create({
         type: "normal",
         title: "Remote download selected links",
         contexts: ["link", "selection"],
-        onclick: function(clickData, tab) {
+        onclick: function (clickData, tab) {
             downloadAction(clickData, tab, APIURLS.remoteDld, true, 2);
         }
     });
 
-    cm.create({
+    chrome.contextMenus.create({
         type: "separator",
         contexts: ["link", "selection"]
     });
 
-    cm.create({
+    chrome.contextMenus.create({
         type: "normal",
         title: "Instant download custom links",
         contexts: ["all"],
-        onclick: function(clickData, tab) {
+        onclick: function (clickData, tab) {
             customDownload(tab, 0);
         }
     });
-    cm.create({
+    chrome.contextMenus.create({
         type: "normal",
         title: "Cloud download custom links",
         contexts: ["all"],
-        onclick: function(clickData, tab) {
+        onclick: function (clickData, tab) {
             customDownload(tab, 1);
         }
     });
-    cm.create({
+    chrome.contextMenus.create({
         type: "normal",
         title: "Remote download custom links",
         contexts: ["all"],
-        onclick: function(clickData, tab) {
+        onclick: function (clickData, tab) {
             customDownload(tab, 2);
         }
     });
@@ -124,16 +120,16 @@ function initMenus() {
 
 function customDownload(tab, type) {
     if (apiKey == null) {
-        checkLogin(function(){
-            getApiKey(function() {
-                t.sendMessage(tab.id, {
+        checkLogin(function () {
+            getApiKey(function () {
+                browser.tabs.sendMessage(tab.id, {
                     cmd: "showModal",
                     type: type
                 });
             });
         });
     } else {
-        t.sendMessage(tab.id, {
+        browser.tabs.sendMessage(tab.id, {
             cmd: "showModal",
             type: type
         });
@@ -142,8 +138,8 @@ function customDownload(tab, type) {
 
 function downloadAction(clickData, tab, apiLink, remote, type) {
     if (apiKey == null) {
-        checkLogin(function(){
-            getApiKey(function() {
+        checkLogin(function () {
+            getApiKey(function () {
                 startAction();
             });
         });
@@ -154,21 +150,20 @@ function downloadAction(clickData, tab, apiLink, remote, type) {
     function startAction() {
         apiLink += "?apiKey=" + apiKey;
 
-        t.sendMessage(tab.id, {
+        browser.tabs.sendMessage(tab.id, {
             cmd: "appendLoader"
         });
 
         if (clickData.linkUrl) {
             processCall(apiLink, clickData.linkUrl, remote, tab, type);
         } else if (clickData.selectionText) {
-            t.sendMessage(tab.id, {
+            browser.tabs.sendMessage(tab.id, {
                 cmd: "getSelectedHtml"
-            }).then(function(resp) {
+            }).then(function (resp) {
                 if (resp && resp.html) {
                     processMultipleLink(resp.html, true, remote, tab, apiLink, resp.href, type);
                 }
             }).catch(function onError(error) {
-              console.error(`Error: ${error}`);
             });
         }
     }
@@ -182,7 +177,7 @@ function processMultipleLink(html, needReg, remote, tab, api, href, type) {
         result = findLinkByText(html);
     }
 
-    result = result.map(function(link) {
+    result = result.map(function (link) {
         if (link.startsWith('http')) {
             return link;
         } else {
@@ -205,19 +200,19 @@ function processMultipleLink(html, needReg, remote, tab, api, href, type) {
             }));
         }
         var multiRequest = $.when.apply($, requestList);
-        multiRequest.done(function(data) {
+        multiRequest.done(function (data) {
             var finalData = [];
-            $.each(arguments, function(index, responseData) {
+            $.each(arguments, function (index, responseData) {
                 if (responseData[1] == "success") {
                     if (responseData[0].not_available) {
-                        t.sendMessage(tab.id, {
+                        browser.tabs.sendMessage(tab.id, {
                             cmd: "errorNotification"
                         });
 
                         return false;
                     } else {
                         if (remote) {
-                            t.sendMessage(tab.id, {
+                            browser.tabs.sendMessage(tab.id, {
                                 cmd: "remoteInProcessNotification"
                             });
                             return false;
@@ -227,7 +222,7 @@ function processMultipleLink(html, needReg, remote, tab, api, href, type) {
                         }
                     }
                 } else {
-                    t.sendMessage(tab.id, {
+                    browser.tabs.sendMessage(tab.id, {
                         cmd: "errorNotification"
                     });
                 }
@@ -237,14 +232,14 @@ function processMultipleLink(html, needReg, remote, tab, api, href, type) {
                 //copying the result to the clipboard
                 var text = finalData.join("\n");
 
-                t.sendMessage(tab.id, {
+                browser.tabs.sendMessage(tab.id, {
                     cmd: "successNotification",
                     text: text,
                     type: type
-                }, function(res) {
-                    if (res){
-                        finalData.forEach(function(url) {
-                            t.create({
+                }, function (res) {
+                    if (res) {
+                        finalData.forEach(function (url) {
+                            browser.tabs.create({
                                 url: url
                             });
                         });
@@ -263,8 +258,8 @@ function processCall(api, link, remote, tab, type) {
     };
     if (remote) {
         dataBody.remoteOptionId = remoteOptionId;
-        processAjax(api, link, true, tab, dataBody, type);  
-        
+        processAjax(api, link, true, tab, dataBody, type);
+
     } else {
         processAjax(api, link, false, tab, dataBody, type);
     }
@@ -273,8 +268,10 @@ function processCall(api, link, remote, tab, type) {
 function findLinkByRegex(html) {
     var linkReg = /href=[\'"]?([^\'" >]+)/g;
     var result = html.match(linkReg);
-    for (var i = 0; i < result.length; i++) {
-        result[i] = result[i].replace('href="', '');
+    if (result) {
+        for (var i = 0; i < result.length; i++) {
+            result[i] = result[i].replace('href="', '');
+        }
     }
     return result;
 }
@@ -288,45 +285,45 @@ function processAjax(api, link, remote, tab, dataBody, type) {
     $.ajax(api, {
         method: 'POST',
         data: dataBody
-            //        'contentType': 'multipart/form-data'
-    }).success(function(data) {
+        //        'contentType': 'multipart/form-data'
+    }).done(function (data) {
         if (!data.not_available && remote) {
-            t.sendMessage(tab.id, {
+            browser.tabs.sendMessage(tab.id, {
                 cmd: "remoteInProcessNotification"
             });
         } else if (!data.not_available) {
             var url = data.url;
-            if (url != null){
-                t.sendMessage(tab.id, {
+            if (url != null) {
+                browser.tabs.sendMessage(tab.id, {
                     cmd: "successNotification",
                     text: url,
                     type: type
-                }, function(res) {
-                    if (res){
-                        t.create({
+                }, function (res) {
+                    if (res) {
+                        browser.tabs.create({
                             url: url
-                        }); 
+                        });
                     }
                 });
-            } else { 
-                t.sendMessage(tab.id, {
+            } else {
+                browser.tabs.sendMessage(tab.id, {
                     cmd: "errorNotification"
                 });
             }
         } else {
-            t.sendMessage(tab.id, {
+            browser.tabs.sendMessage(tab.id, {
                 cmd: "errorNotification"
             });
         }
-    }).fail(function() {
-        t.sendMessage(tab.id, {
+    }).fail(function () {
+        browser.tabs.sendMessage(tab.id, {
             cmd: "errorNotification"
         });
     });
 }
 
 function checkLogin(callback) {
-    $.get(APIURLS.checkLogin, function(response){
+    $.get(APIURLS.checkLogin, function (response) {
         var loggedIn = response.loggedIn;
 
         if (loggedIn)
@@ -334,25 +331,23 @@ function checkLogin(callback) {
         else
             notifyNotLoggedIn();
 
-    }).fail(function() {
+    }).fail(function () {
         showErrorMessage();
     });
 }
 
-function setDefaultRemoteAccount(callback){
-    $.get(APIURLS.getRemoteId + "?apikey=" + apiKey, function(data){
-        if (!data.error){
+function setDefaultRemoteAccount(callback) {
+    $.get(APIURLS.getRemoteId + "?apikey=" + apiKey, function (data) {
+        if (!data.error) {
             var remoteOptionsArray = data.data;
-            console.log(data);
             if (remoteOptionsArray.length > 0)
                 remoteOptionId = remoteOptionsArray[0].remoteOptionId;
-            console.log(remoteOptionId);
             callback();
         }
     });
 }
 
-om.addListener(function(req, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(function (req, sender, sendResponse) {
     var cmd = req.cmd;
 
     if (req.action == "setApiKey")
@@ -364,8 +359,8 @@ om.addListener(function(req, sender, sendResponse) {
     if (req.action == "removeRemoteOptionId")
         remoteOptionId = null;
 
-    if (cmd == "checkPageUrl"){
-        if (sender.url == sender.tab.url){
+    if (cmd == "checkPageUrl") {
+        if (sender.url == sender.tab.url) {
             sendResponse({
                 success: true
             });
@@ -387,7 +382,7 @@ om.addListener(function(req, sender, sendResponse) {
         }
         currentApi += "?apiKey=" + apiKey;
 
-        t.sendMessage(sender.tab.id, {
+        browser.tabs.sendMessage(sender.tab.id, {
             cmd: "appendLoader"
         });
         processMultipleLink(req.html, false, req.type == 2, sender.tab, currentApi, null, req.type);
@@ -413,20 +408,19 @@ function notifyNotLoggedIn() {
 }
 
 function showNotification(name, options, redirect, redirectUrl) {
-    cn.clear(name, function() {
-        cn.create(name, {
+    chrome.notifications.clear(name, function () {
+        chrome.notifications.create(name, {
             type: options.type,
             iconUrl: 'icon64.png',
             title: options.title,
             message: options.message
-        }, function() {
+        }, function () {
             if (redirect) {
-                t.create({
+                browser.tabs.create({
                     active: true,
                     url: redirectUrl
                 });
             }
-
         });
     });
 }
